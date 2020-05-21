@@ -4,21 +4,34 @@
 
     class Works implements Dao
     {
-        public $worksCollection;
+        public $worksCollection1;
+        public $worksCollection2;
+        public $worksCollection3;
         public $table = 'works';
 
         public function __construct()
         {
             require "application\core\Db.php";
 
-            $this->worksCollection = $client->worksCollection;
+            $this->worksCollection1 = $client->worksCollection1;
+            $this->worksCollection2 = $client->worksCollection2;
+            $this->worksCollection3 = $client->worksCollection3;
             parent::__construct();
         }
 
-        public function create($workValues, $authorValues, $genreValues, $countryValues)
+        public function create($workValues, $authorValues, $genreValues, $countryValues, $db, $dbReplica)
         {
-            if($db = 'mongo') {
-                $this->worksCollection->insertOne(['name' => 'Test', 'age' => 12]);
+            if($db == 'mongo') {
+                $data = ['name' => 'Test', 'age' => 12];
+                if ($dbReplica == 1) {
+                    $this->worksCollection1->insertOne($data);
+                }
+                if ($dbReplica == 2) {
+                    $this->worksCollection2->insertOne($data);
+                }
+                if ($dbReplica == 3) {
+                    $this->worksCollection3->insertOne($data);
+                }
             }
             else {
                 $workKey = $this->createWork($workValues);
@@ -33,10 +46,19 @@
             
         }
 
-        public function update()
+        public function update($db, $dbReplica)
         {
             if($db = 'mongo') {
-                $this->worksCollection->updateMany(['name' => 'Test', 'age' => 12], ['$set'=> ['name' => 'Updated', 'age' => 13, 'makitra' => 1]]); 
+                $data = ['name' => 'Test', 'age' => 12], ['$set'=> ['name' => 'Updated', 'age' => 13, 'makitra' => 1]]
+                if ($dbReplica == 1) {
+                    $this->worksCollection1->updateMany($data);
+                }
+                if ($dbReplica == 2) {
+                    $this->worksCollection2->updateMany($data);
+                }
+                if ($dbReplica == 3) {
+                    $this->worksCollection3->updateMany($data);
+                }
             }
             else {
                 if(!empty($data['workValues'])) {
@@ -53,30 +75,54 @@
             return $this->updateRecord('works', $columns, $values, 'id_works', $condition);
         }
 
-        public function getOne()
+        public function getOne($db, $dbReplica)
         {
             if($db = 'mongo') {
-                return $this->worksCollection->findOne(['name' => 'Test', 'age' => 12]);
+                if ($dbReplica == 1) {
+                    return $this->worksCollection1->findOne(['name' => 'Test', 'age' => 12]);
+                }
+                if ($dbReplica == 2) {
+                    return $this->worksCollection2->findOne(['name' => 'Test', 'age' => 12]);
+                }
+                if ($dbReplica == 3) {
+                    return $this->worksCollection3->findOne(['name' => 'Test', 'age' => 12]);
+                }
             }
             else {
                 return $this->getOne($this->table, 'id_works', intval($id));
             }
         }
 
-        public function getAllByKeys()
+        public function getAllByKeys($db, $dbReplica)
         {
             if($db = 'mongo') {
-                return $this->worksCollection->find(['name' => 'Test', 'age' => 12]);
+                if ($dbReplica == 1) {
+                    return $this->worksCollection1->find(['name' => 'Test', 'age' => 12]);
+                }
+                if ($dbReplica == 2) {
+                    return $this->worksCollection2->find(['name' => 'Test', 'age' => 12]);
+                }
+                if ($dbReplica == 3) {
+                    return $this->worksCollection3->find(['name' => 'Test', 'age' => 12]);
+                }
             }
             else {
                 return $this->getAllByTag(['name' => 'Test', 'age' => 12]);
             }
         }
 
-        public function getAll()
+        public function getAll($db, $dbReplica)
         {
             if($db = 'mongo') {
-                return $this->worksCollection->find();
+                if ($dbReplica == 1) {
+                    return $this->worksCollection1->find();
+                }
+                if ($dbReplica == 2) {
+                    return $this->worksCollection2->find();
+                }
+                if ($dbReplica == 3) {
+                    return $this->worksCollection3->find();
+                }
             }
             else {
                 return $this->getAllWithRelations();

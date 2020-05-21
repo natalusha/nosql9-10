@@ -28,7 +28,7 @@ class WorkController extends Controller
             [$_POST['workName'], $_POST['workCreationYear']],
             [$_POST['firstName'], $_POST['secondName'], $_POST['penName'], $_POST['birthDate'], $_POST['deathDate']],
             [$_POST['genre']],
-            [$_POST['countryName'], $_POST['cityName']], $db = $_GET['selectDB']);
+            [$_POST['countryName'], $_POST['cityName']], $db = $_GET['selectDB'], $selectReplica = $_GET['selectReplica']);
 
         header('location: /');
     }
@@ -36,7 +36,7 @@ class WorkController extends Controller
     public function showUpdate()
     {   
         if (isset($_GET['workId'])) {
-            $this->view->render('Update work', ['worksInfo' => $this->works->getOneWork($_GET['workId'], $db = $_GET['selectDB'])]);
+            $this->view->render('Update work', ['worksInfo' => $this->works->getOneWork($_GET['workId'], $db = $_GET['selectDB'], $selectReplica = $_GET['selectReplica'])]);
         }
     }
 
@@ -49,26 +49,26 @@ class WorkController extends Controller
                     'condition' => $_POST['workId']
                 ],
             ],
-            $db = $_GET['selectDB']
+            $db = $_GET['selectDB'], $selectReplica = $_GET['selectReplica']
         );
         header('location: /');
     }
 
     public function deleteWork()
     {
-        $this->works->deleteWork($_GET['workToDelete'], $db = $_GET['selectDB']);
+        $this->works->deleteWork($_GET['workToDelete'], $db = $_GET['selectDB'], $selectReplica = $_GET['selectReplica']);
         header('location: /');
     }
 
     public function showSelect()
     {
         $authors = $this->works->getAllAuthors();
-        $this->view->render('Show select', ['authors' => $authors], $db = $_GET['selectDB']);
+        $this->view->render('Show select', ['authors' => $authors], $db = $_GET['selectDB'], $selectReplica = $_GET['selectReplica']);
     }
 
     public function selectBookByAuthor()
     {
-        $result = $this->works->getWorksByAuthor($_GET['authorId'], $db = $_GET['selectDB']);
+        $result = $this->works->getWorksByAuthor($_GET['authorId'], $db = $_GET['selectDB'], $selectReplica = $_GET['selectReplica']);
 
         $this->view->render('Result selection', ['result' => $result]);
     }
@@ -85,9 +85,9 @@ class WorkController extends Controller
 
         for ($i = 0; $i < $quantityOfRequests; $i++) {
             $this->works->create(["Kobzar", 1992],
-                                ["Mark", "Sevchenlo", "Kobzar", "2019-12-06", "2019-12-26"],
-                                ["poem"],
-                                ["Sweden", "Stokgolm"], $db = $_GET['selectDB']);      
+                                 ["Mark", "Sevchenlo", "Kobzar", "2019-12-06", "2019-12-26"],
+                                 ["poem"],
+                                 ["Sweden", "Stokgolm"], $db = $_GET['selectDB'], $selectReplica = $_GET['selectReplica']);      
         }
 
         $endtime = microtime(true);
