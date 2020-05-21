@@ -1,17 +1,56 @@
-# NOSQL 7-8 ПЗ
 
-На стороне клиента **всегда** присутсвует выпадающий список для выбора БД с которой нужно работать.
-![enter image description here](https://raw.githubusercontent.com/natalusha/NOSQL/master/%D0%A1%D0%BD%D0%B8%D0%BC%D0%BE%D0%BA.PNG)
+# NOSQL 9-10 ПЗ
 
-На стороне сервера мы в каждом запросе получаем  параметр $_GET массива с указанной БД. Эта переменная передается каждый раз вы выполнении запросов.
+Для создания реплик мы добавляем опции подключения к MongoDB, где указываем количество реплик и по каким портам их нужно инициализировать.
 
-**$db = $_GET['selectDB']**
+    $client = (new MongoDB\Client("mongodb://localhost:27017,mongodb://localhost:27018,mongodb://localhost:27019", , ["replicaSet" => ["db1", "db2", "db3"]]))->mongo;
+
+Остальная логика, а именно создание колекций в каждой реплике осуществляется уже в файле модели Works.php
+
+    class  Works  implements  Dao
+
+	{
+
+	public  $worksCollection1;
+
+	public  $worksCollection2;
+
+	public  $worksCollection3;
+
+	public  $table = 'works';
+
+	  
+
+	public  function  __construct()
+
+	{
+
+	require  "application\core\Db.php";
+
+	  
+
+	$this->worksCollection1 = $client[0]->worksCollection1;
+
+	$this->worksCollection2 = $client[1]->worksCollection2;
+
+	$this->worksCollection3 = $client[2]->worksCollection3;
+
+	parent::__construct();
+
+	}
+
+Как и в предыдущей лабораторной, я добавила выпадающий список для выбора реплики, выпадающий список активен только при выборе MongoDB из списка выше.
+![enter image description here](https://raw.githubusercontent.com/natalusha/nosql9-10/master/1.PNG)
+
+На стороне сервера мы в каждом запросе получаем  параметр $_GET массива с указанной БД и Репликой. 
+
+**$db = $_GET['selectDB'], $selectReplica = $_GET['selectReplica']**
 
     public  function  index()
 
 	{
 
-	$allWorksWithRelations = $this->works->getAll($db = $_GET['selectDB']);
+	$allWorksWithRelations = $this->works->getAll($db = $_GET['selectDB'], 	$selectReplica = $_GET['selectReplica']);
 
 	  
 
@@ -33,7 +72,7 @@
 
 	[$_POST['genre']],
 
-	[$_POST['countryName'], $_POST['cityName']], $db = $_GET['selectDB']);
+	[$_POST['countryName'], $_POST['cityName']], $db = $_GET['selectDB'], $selectReplica = $_GET['selectReplica']);
 
 	  
 
@@ -41,25 +80,71 @@
 
 	}
 
-И так далее в каждом запросе. *Файл: WorkController.php*
+	  
 
-После контроллера данные оправляются в модель, где уже в каждом DAO методе выполняется проверка: 
-
-    public  function  getAll()
+	public  function  showUpdate()
 
 	{
 
-		if($db = 'mongo') {
+	if (isset($_GET['workId'])) {
 
-			return  $this->worksCollection->find();
+	$this->view->render('Update work', ['worksInfo' => $this->works->getOneWork($_GET['workId'], $db = $_GET['selectDB'], $selectReplica = $_GET['selectReplica'])]);
 
-		}
+	}
 
-		else {
+	}
 
-			return  $this->getAllWithRelations();
+И так далее в каждом запросе. *Файл: WorkController.php*
 
-		}
+После контроллера данные оправляются в модель, где уже в каждом DAO методе выполняется проверка, как можно заметить, теперь добавлена проверка на реплику.
+
+	public  function  create($workValues, $authorValues, $genreValues, $countryValues, $db, $dbReplica)
+
+	{
+
+	if($db == 'mongo') {
+
+	$data = ['name' => 'Test', 'age' => 12];
+
+	if ($dbReplica == 1) {
+
+	$this->worksCollection1->insertOne($data);
+
+	}
+
+	if ($dbReplica == 2) {
+
+	$this->worksCollection2->insertOne($data);
+
+	}
+
+	if ($dbReplica == 3) {
+
+	$this->worksCollection3->insertOne($data);
+
+	}
+
+	}
+
+	else {
+
+	$workKey = $this->createWork($workValues);
+
+	$authorKey = $this->createAuthor($authorValues);
+
+	$genreKey = $this->createGenre($genreValues);
+
+	$countryKey = $this->createCountry($countryValues);
+
+	  
+
+	$this->createWorksAuthorsRelations($workKey, $authorKey);
+
+	$this->createGenreWorkRelations($genreKey, $workKey);
+
+	$this->createCountryAuthorRelations($countryKey, $authorKey);
+
+	}
 
 	}
 Файл: Model.php
